@@ -1,0 +1,21 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: api-example-com-vs-external
+  namespace: gloo-external
+  labels:
+    gateway-type: public
+spec:
+  virtualHost:
+    domains:
+    - 'api.example.com:81'
+    routes:
+    - matchers:
+      - prefix: /httpbin/
+      routeAction:
+        single:
+          upstream:
+            name: httpbin-httpbin-8000
+            namespace: gloo-system
+      options:
+        prefixRewrite: /

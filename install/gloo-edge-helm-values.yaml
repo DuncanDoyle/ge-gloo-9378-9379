@@ -1,0 +1,66 @@
+gloo:
+  settings:
+    disableKubernetesDestinations: true
+    # writeNamespace: gloo-external
+  discovery:
+    enabled: true
+  gateway:
+    # ddoyle: enabled for debugging purposes to be able to see the Proxy CR. Has performance impact, so don't enable in production environments.
+    persistProxySpec: true
+    # Allow gateways to live in all namespaces, not just our `writeNamespace`.
+    readGatewaysFromAllNamespaces: true
+  gatewayProxies:      
+    gatewayProxy:
+      disabled: false
+      readConfig: true
+      readConfigMulticluster: true
+      gatewaySettings:
+        customHttpGateway:
+          virtualServiceSelector:
+            gateway-type: default # label set on the VirtualService
+        customHttpsGateway:
+          virtualServiceSelector:
+            gateway-type: default # label set on the VirtualService
+    publicGw: # Proxy name for public access (Internet facing)
+      namespace: gloo-external
+      disabled: false
+      readConfig: true
+      readConfigMulticluster: true
+      kind:
+        deployment:
+          replicas: 1
+      service:
+        httpPort: 81
+        httpsFirst: true
+        httpsPort: 444
+        type: LoadBalancer
+      tcpKeepaliveTimeSeconds: 5 # send keep-alive probes after 5s to keep connection up
+      gatewaySettings:
+        customHttpGateway:
+          virtualServiceSelector:
+            gateway-type: public # label set on the VirtualService
+        customHttpsGateway:
+          virtualServiceSelector:
+            gateway-type: public # label set on the VirtualService
+        # disableHttpGateway: true # disable the default HTTP Gateway
+    corpGw: # Proxy name for private access (intranet facing)
+      namespace: gloo-internal
+      disabled: false
+      readConfig: true
+      readConfigMulticluster: true
+      kind:
+        deployment:
+          replicas: 1
+      service:
+        httpPort: 8080
+        httpsFirst: true
+        httpsPort: 8443
+        type: LoadBalancer
+      tcpKeepaliveTimeSeconds: 5 # send keep-alive probes after 5s to keep connection up
+      gatewaySettings:
+        customHttpGateway:
+          virtualServiceSelector:
+            gateway-type: private # label set on the VirtualService
+        customHttpsGateway:
+          virtualServiceSelector:
+            gateway-type: private # label set on the VirtualService
